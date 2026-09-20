@@ -2,7 +2,7 @@
 
 > **Author:** Marcus Paula | Independent security engineering lab  
 > **Date:** 2026-02  
-> **Classification:** Anonymised Case Study — Internal DFIR Reference  
+> **Classification:** Fictional practice scenario — not a record of a real incident  
 > **Environment:** a fictional enterprise multi-site lab environment (Site A/Site B/Site C)
 
 ---
@@ -227,7 +227,7 @@ Corporate controls reinforced:
 | No automatic account lockout on geo anomaly | 18-minute exposure window | Implement auto-lockout on impossible travel |
 | MFA not required for all SSO apps | Some apps accessed without step-up | Enforce MFA for all SSO-connected apps |
 
-### Metrics
+### Illustrative Scenario Timings — Not Measured Results
 
 | Metric | Value | Target |
 |--------|-------|--------|
@@ -239,7 +239,7 @@ Corporate controls reinforced:
 
 ---
 
-## Controls Matrix — Post-Incident
+## Proposed Controls Matrix — Scenario End State
 
 | Control | Status Before | Status After |
 |---------|--------------|-------------|

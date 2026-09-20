@@ -2,7 +2,7 @@
 
 > **Author:** Marcus Paula | Independent security engineering lab  
 > **Date:** 2026-02  
-> **Classification:** Anonymised Case Study — Internal DFIR Reference  
+> **Classification:** Fictional practice scenario — not a record of a real incident  
 > **Environment:** a fictional enterprise multi-site lab environment (Site A)
 
 ---
@@ -182,7 +182,7 @@ When the device was returned via lost property:
 
 ---
 
-## Outcome
+## Scenario Outcome — Illustrative
 
 - **Data breach:** Not confirmed — FileVault protected at rest
 - **Account compromise:** Not detected — no anomalous auth events
@@ -202,7 +202,7 @@ When the device was returned via lost property:
 
 ---
 
-## Controls Validated
+## Proposed Controls — Not Independently Validated
 
 - FileVault full-disk encryption effective
 - MDM platform MDM Lost Mode functional
