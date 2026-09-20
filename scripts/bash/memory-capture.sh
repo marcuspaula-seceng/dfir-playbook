@@ -122,8 +122,11 @@ capture_kcore() {
 
     log "RAM size: $ram_bytes bytes"
     log "Copying /proc/kcore (limited to RAM size)..."
-    dd if=/proc/kcore of="${OUTPUT_FILE}.kcore" bs=4M count=$(( ram_bytes / (4*1024*1024) )) 2>&1 | tee -a "$LOG_FILE" || true
-    log "kcore copy done (may be incomplete)."
+    if ! dd if=/proc/kcore of="${OUTPUT_FILE}.kcore" bs=4M count=$(( ram_bytes / (4*1024*1024) )) 2>&1 | tee -a "$LOG_FILE"; then
+        err "kcore capture failed; any partial output must not be treated as a complete image."
+        return 1
+    fi
+    warn "kcore copy finished; this method does not establish complete physical-memory acquisition."
 }
 
 # ---------------------------------------------------------------------------
@@ -131,8 +134,16 @@ capture_kcore() {
 # ---------------------------------------------------------------------------
 hash_image() {
     log "Hashing memory image (SHA256)..."
-    sha256sum "$OUTPUT_FILE" >> "$OUTPUT_DIR/SHA256SUMS.txt" 2>/dev/null || \
-    sha256sum "${OUTPUT_FILE}.kcore" >> "$OUTPUT_DIR/SHA256SUMS.txt" 2>/dev/null || true
+    local img="$OUTPUT_FILE"
+    if [ "$METHOD" == "kcore" ]; then img="${OUTPUT_FILE}.kcore"; fi
+    if [ ! -s "$img" ]; then
+        err "Memory image missing or empty; hash not recorded."
+        return 1
+    fi
+    if ! sha256sum "$img" >> "$OUTPUT_DIR/SHA256SUMS.txt"; then
+        err "Hashing failed; integrity has not been verified."
+        return 1
+    fi
     log "Hash recorded."
 }
 

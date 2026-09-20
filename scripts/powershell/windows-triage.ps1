@@ -311,25 +311,32 @@ if (Get-WinEvent -ListLog "Microsoft-Windows-Sysmon/Operational" -ErrorAction Si
 Write-Log "Event log export done."
 
 # ---------------------------------------------------------------------------
-# Hashing
+# Finalise metadata before hashing
 # ---------------------------------------------------------------------------
-Write-Log "Hashing evidence files..."
+$end = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss")
+$manifestPath = [System.IO.Path]::GetFullPath((Join-Path $EvidenceDir "SHA256SUMS.txt"))
+$fileCount = @(Get-ChildItem "$EvidenceDir" -Recurse -File -ErrorAction Stop |
+    Where-Object { $_.FullName -ne $manifestPath }).Count
 
-Get-ChildItem "$EvidenceDir" -Recurse -File | ForEach-Object {
-    $hash = Get-FileHash $_.FullName -Algorithm SHA256
-    "$($hash.Hash)  $($_.FullName)"
-} | Out-File "$EvidenceDir\SHA256SUMS.txt" -Encoding UTF8
-
-# ---------------------------------------------------------------------------
-# Complete
-# ---------------------------------------------------------------------------
-$end = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-$fileCount = (Get-ChildItem "$EvidenceDir" -Recurse -File).Count
-
-Write-Log "=== TRIAGE COMPLETE ==="
+Write-Log "Collection steps finished; finalising metadata before integrity hashing."
 Write-Log "End time  : $end UTC"
 Write-Log "Files     : $fileCount"
 Write-Log "Evidence  : $EvidenceDir"
 Write-Log "Remember to complete chain of custody documentation."
+Add-Content -Path "$EvidenceDir\triage-metadata.txt" -Value "`nEnd time: $end UTC`nFiles collected: $fileCount" -ErrorAction Stop
 
-Add-Content -Path "$EvidenceDir\triage-metadata.txt" -Value "`nEnd time: $end UTC`nFiles collected: $fileCount"
+# Do not write to collected files after this point, including triage.log.
+# The manifest must never hash itself, including on a repeated run.
+try {
+    $hashes = @(Get-ChildItem "$EvidenceDir" -Recurse -File -ErrorAction Stop |
+        Where-Object { $_.FullName -ne $manifestPath } |
+        ForEach-Object {
+            $hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256 -ErrorAction Stop
+            "$($hash.Hash)  $($_.FullName)"
+        })
+    $hashes | Out-File -LiteralPath $manifestPath -Encoding UTF8 -ErrorAction Stop
+    Write-Host "Integrity manifest written: $manifestPath" -ForegroundColor Green
+} catch {
+    Write-Error "Integrity hashing failed: $_" -ErrorAction Continue
+    exit 1
+}

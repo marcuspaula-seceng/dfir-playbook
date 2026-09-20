@@ -20,6 +20,10 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
 
+      - name: Evidence finalisation regression checks
+        shell: bash
+        run: BASH_EXE="$(cygpath -w "$BASH")" python tests/test_evidence_integrity.py --require-pwsh
+
       - name: PowerShell syntax
         shell: pwsh
         run: |

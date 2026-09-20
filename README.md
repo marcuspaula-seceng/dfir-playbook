@@ -134,7 +134,9 @@ and lessons learned — with evidence collected in order of volatility.
 ## Validation
 
 The collection scripts were run against controlled test systems. Output was reviewed manually
-for completeness. There is no automated test suite and no CI in this repository.
+for completeness. Focused regression checks cover manifest finalisation and hash-failure
+reporting, and a validation workflow runs on every pull request. Neither asserts forensic
+correctness of collected artefacts.
 
 ## Limitations
 
@@ -197,3 +199,13 @@ Every pull request is validated automatically: PowerShell parse checks, shell sy
 balanced Markdown fences and resolution of every relative link. There is no automated test that
 asserts forensic correctness of the collected artefacts — that remains a manual review step,
 and it is listed in the improvements below rather than implied to exist.
+
+Run the focused regression checks locally against temporary synthetic fixtures:
+
+```bash
+python tests/test_evidence_integrity.py
+```
+
+The PowerShell checks need `pwsh`; the local run reports them as skipped when it is absent,
+while CI requires them via `--require-pwsh`. No live host collection, directory change or
+memory acquisition is performed by these tests.

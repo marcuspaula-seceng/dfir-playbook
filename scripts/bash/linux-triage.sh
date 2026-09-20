@@ -229,8 +229,13 @@ hash_evidence() {
     hdr "Evidence Integrity"
 
     log "Generating SHA256 hashes..."
-    find "$EVIDENCE_DIR" -type f -not -name "*.sha256" \
-        -exec sha256sum {} \; > "$EVIDENCE_DIR/SHA256SUMS.txt"
+    local manifest="$EVIDENCE_DIR/SHA256SUMS.txt"
+    while IFS= read -r -d '' evidence_file; do
+        if ! sha256sum "$evidence_file"; then
+            err "Hashing failed: $evidence_file"
+            return 1
+        fi
+    done < <(find "$EVIDENCE_DIR" -type f -not -path "$manifest" -print0) > "$manifest"
 
     log "SHA256SUMS.txt written."
 }
@@ -239,7 +244,7 @@ hash_evidence() {
 # Finish
 # ---------------------------------------------------------------------------
 finish() {
-    hdr "Triage Complete"
+    hdr "Collection Finished — Finalising Metadata"
     {
         echo "Triage end  : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
         echo "Evidence dir: $EVIDENCE_DIR"
@@ -248,7 +253,7 @@ finish() {
 
     echo ""
     log "Evidence stored in: $EVIDENCE_DIR"
-    log "Hash manifest: $EVIDENCE_DIR/SHA256SUMS.txt"
+    log "Hash manifest will be written after metadata is finalised."
     warn "Remember to document chain of custody."
 }
 
@@ -263,8 +268,9 @@ main() {
     collect_persistence
     collect_filesystem
     collect_logs
-    hash_evidence
     finish
+    hash_evidence
+    log "Triage complete; integrity manifest written."
 }
 
 main "$@"
